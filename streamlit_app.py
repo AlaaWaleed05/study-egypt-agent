@@ -47,7 +47,7 @@ def api_login(email, password):
         human_delay(2, 4)
 
         res = session.post(
-            f"{BASE_URL}/auth/login",
+            f"{BASE_URL}/student/login",
             json={"email": email, "password": password},
             timeout=30
         )
@@ -70,7 +70,7 @@ def api_logout(session):
     """تسجيل خروج"""
     try:
         session.post(
-            f"{BASE_URL}/auth/logout",
+            f"{BASE_URL}/student/logout",
             json={"redirectUrl": SITE_URL},
             timeout=15
         )
