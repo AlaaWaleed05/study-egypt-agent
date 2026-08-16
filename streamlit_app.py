@@ -53,7 +53,7 @@ def api_login(email, password):
         )
 
         if res.status_code not in [200, 201]:
-            return None, f"فشل اللوجين - كود: {res.status_code}"
+            return None, None, f"فشل اللوجين - كود: {res.status_code}"
 
         # استنى شوية بعد اللوجين
         human_delay(2, 3)
