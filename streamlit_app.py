@@ -165,6 +165,7 @@ def find_excel_columns(ws):
 # ==================== الواجهة ====================
 
 st.set_page_config(
+    menu_items={"Get help": None, "Report a bug": None, "About": None},
     page_title="ادرس في مصر - Agent",
     page_icon="🎓",
     layout="centered"
@@ -173,6 +174,10 @@ st.set_page_config(
 st.markdown("""
 <style>
     body { direction: rtl; }
+    #MainMenu {visibility: hidden;}
+    footer {visibility: hidden;}
+    header {visibility: hidden;}
+    [data-testid="stToolbar"] {visibility: hidden;}
     .stApp { background-color: #0f1923; }
     h1 { color: #00c6ff !important; text-align: center; }
     .stButton > button {
