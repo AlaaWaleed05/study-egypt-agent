@@ -115,7 +115,19 @@ def get_status(session, csrf_token):
 
         # أحدث طلب (مرتبين من الأحدث للأقدم)
         latest = results[0]
-        status = latest.get("activityName", "غير محدد")
+
+        # جدول ترجمة activityName للعربي الصح
+        translations = {
+            "قبول الفحص الفنى": "القبول المبدئي",
+            "قبول الفحص الفني": "القبول المبدئي",
+            "kb8ijfo8": "تم السداد",
+            "تم السداد": "تم السداد",
+            "تأكيد استلام الملف وصحة و اكتمال المستندات": "تأكيد استلام الملف وصحة واكتمال المستندات",
+            "الانتظار مراجعة الطلب": "بانتظار مراجعة الطلب",
+            "قبول من رئيس الادارة المركزية": "قبول من رئيس الإدارة المركزية",
+        }
+        raw_status = latest.get("activityName", "غير محدد")
+        status = translations.get(raw_status, raw_status)
         app_id = str(latest.get("ID", ""))
         return app_id, status
 
