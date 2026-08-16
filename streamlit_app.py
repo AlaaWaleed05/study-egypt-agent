@@ -178,6 +178,17 @@ st.markdown("""
     footer {visibility: hidden;}
     header {visibility: hidden;}
     [data-testid="stToolbar"] {visibility: hidden;}
+    [data-testid="stDecoration"] {visibility: hidden;}
+    [data-testid="stStatusWidget"] {visibility: hidden;}
+    .viewerBadge_container__r5tak {display: none;}
+    .styles_viewerBadge__CvC9N {display: none;}
+    #stDecoration {display: none;}
+    .stApp > header {display: none;}
+    [data-testid="stSidebarNav"] {display: none;}
+    .css-1jc7ptx, .e1ewe7hr3, .viewerBadge_container__1QSob,
+    .styles_viewerBadge__1yB5_, .viewerBadge_link__1S137,
+    .viewerBadge_text__1JaDK, div[class*="viewerBadge"],
+    div[class*="StatusWidget"], [data-testid="stBottom"] > div:last-child {display: none !important;}
     .stApp { background-color: #0f1923; }
     h1 { color: #00c6ff !important; text-align: center; }
     .stButton > button {
