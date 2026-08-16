@@ -4,6 +4,9 @@ Streamlit App
 """
 
 import streamlit as st
+import gspread
+from google.oauth2.service_account import Credentials
+from datetime import datetime
 import requests
 import openpyxl
 import json
@@ -16,6 +19,76 @@ OFFICES = {
     "office1": "pass1234",
     "office2": "pass5678",
 }
+
+SHEET_ID = "1BlFdtY-7ZIF1y2GwVosxlG9r7nK5xqYeW6yiIjPI_9U"
+DRIVE_FOLDER_ID = "12L_qSHBnW4-tfQZRteynInWNBAML016f"
+
+# ==================== Google Sheets Logging ====================
+
+def get_sheet():
+    """اتصل بـ Google Sheets"""
+    try:
+        creds_dict = st.secrets["gcp_service_account"]
+        creds = Credentials.from_service_account_info(
+            creds_dict,
+            scopes=["https://spreadsheets.google.com/feeds",
+                    "https://www.googleapis.com/auth/drive"]
+        )
+        client = gspread.authorize(creds)
+        sheet = client.open_by_key(SHEET_ID).sheet1
+        return sheet
+    except Exception as e:
+        print(f"خطأ في Google Sheets: {e}")
+        return None
+
+def log_to_sheet(office, action, filename=""):
+    """بيسجل كل عملية في Google Sheets"""
+    try:
+        sheet = get_sheet()
+        if sheet:
+            now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+            sheet.append_row([now, office, action, filename])
+    except Exception as e:
+        print(f"خطأ في التسجيل: {e}")
+
+def upload_to_drive(file_bytes, filename, office):
+    """بيرفع الإكسيل على Google Drive"""
+    try:
+        from googleapiclient.discovery import build
+        from googleapiclient.http import MediaIoBaseUpload
+        import io as _io
+
+        creds_dict = st.secrets["gcp_service_account"]
+        creds = Credentials.from_service_account_info(
+            creds_dict,
+            scopes=["https://www.googleapis.com/auth/drive"]
+        )
+
+        service = build("drive", "v3", credentials=creds)
+
+        now = datetime.now().strftime("%Y%m%d_%H%M%S")
+        drive_filename = f"{office}_{now}_{filename}"
+
+        file_metadata = {
+            "name": drive_filename,
+            "parents": [DRIVE_FOLDER_ID]
+        }
+
+        media = MediaIoBaseUpload(
+            _io.BytesIO(file_bytes),
+            mimetype="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+        )
+
+        service.files().create(
+            body=file_metadata,
+            media_body=media,
+            fields="id"
+        ).execute()
+
+        return True
+    except Exception as e:
+        print(f"خطأ في رفع الملف: {e}")
+        return False
 
 # ==================== API ====================
 BASE_URL = "https://apiadm.study-in-egypt.gov.eg/api"
@@ -220,6 +293,7 @@ if not st.session_state.logged_in:
         if OFFICES.get(username) == password:
             st.session_state.logged_in = True
             st.session_state.office = username
+            log_to_sheet(username, "تسجيل دخول")
             st.rerun()
         else:
             st.error("اسم المكتب أو الباسورد غلط!")
@@ -231,6 +305,7 @@ st.markdown(f"مرحباً بمكتب: **{st.session_state.office}**")
 uploaded = st.file_uploader("ارفع ملف الإكسيل", type=["xlsx", "xls"])
 
 if uploaded and st.button("▶ ابدأ"):
+    log_to_sheet(st.session_state.office, "رفع ملف", uploaded.name)
     file_bytes = uploaded.read()
     wb = openpyxl.load_workbook(io.BytesIO(file_bytes))
     ws = wb.active
@@ -296,6 +371,10 @@ if uploaded and st.button("▶ ابدأ"):
     log_lines.append(f"✅ خلصنا! إجمالي: {total} | نجح: {success} | فشل: {failed}")
     log_area.code("\n".join(log_lines))
 
+    # ارفع الإكسيل على Drive
+    upload_to_drive(out.getvalue(), uploaded.name, st.session_state.office)
+    log_to_sheet(st.session_state.office, "اكتمل المعالجة", uploaded.name)
+
     st.success("خلصنا! حملي الإكسيل المحدث 👇")
     st.download_button(
         label="⬇ تحميل الإكسيل المحدث",
@@ -305,5 +384,6 @@ if uploaded and st.button("▶ ابدأ"):
     )
 
 if st.button("خروج"):
+    log_to_sheet(st.session_state.get("office",""), "تسجيل خروج")
     st.session_state.clear()
     st.rerun()
